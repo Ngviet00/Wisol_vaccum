@@ -1,4 +1,5 @@
-﻿using MS_Seed.Common;
+﻿using MS_Seed.Classes;
+using MS_Seed.Common;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -134,6 +135,34 @@ namespace MS_Seed.SQL
                         command.Parameters.AddWithValue("@qrCode", qrCode);
                         command.Parameters.AddWithValue("@content", content);
                         command.Parameters.AddWithValue("@createdAt", createdAt);
+                        command.ExecuteNonQuery();
+                    }
+
+                    transaction.Commit();
+
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Files.WriteLog($"Error can not insert into database, error: {ex.Message}");
+                return false;
+            }
+        }
+
+        public bool Insert(DataSerialPort result)
+        {
+            try
+            {
+                string insertQuery = "INSERT INTO qrcodes (qr_code, content, created_at) VALUES (@qrCode, @content, @createdAt);";
+
+                using (var transaction = _connection.BeginTransaction())
+                {
+                    using (var command = new SQLiteCommand(insertQuery, _connection))
+                    {
+                        command.Parameters.AddWithValue("@qrCode", result.Barcode);
+                        command.Parameters.AddWithValue("@content", result.Barcode);
+                        command.Parameters.AddWithValue("@createdAt", result.Barcode);
                         command.ExecuteNonQuery();
                     }
 

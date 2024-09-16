@@ -1,8 +1,11 @@
-﻿using MS_Seed.Common;
+﻿using MS_Seed.Classes;
+using MS_Seed.Common;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO.Ports;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MS_Seed.IndustrialCommunication.Ethernet
 {
@@ -23,7 +26,7 @@ namespace MS_Seed.IndustrialCommunication.Ethernet
         private readonly int dataBits = int.Parse(ConfigurationManager.AppSettings["DATA_BITS"] ?? "8");
 
         private readonly Enum stopBits = (StopBits)Enum.Parse(typeof(StopBits), ConfigurationManager.AppSettings["STOP_BITS"] ?? "1");
-
+        public FormMain formMain { get; set; }
         public static ControlSerialPort Instance
         {
             get
@@ -95,10 +98,48 @@ namespace MS_Seed.IndustrialCommunication.Ethernet
         {
             try
             {
-                SerialPort sp = (SerialPort)sender;
-                string data = sp.ReadExisting();
+                if (serialPort == null)
+                {
+                    return;
+                }
 
-                Console.WriteLine($"Data Received: {data}");
+                string value = serialPort.ReadExisting();
+
+                if (value != "done")
+                {
+                    DataSerialPort result = new DataSerialPort();
+
+                    var data = value.Split(',');
+
+                    result.WaitTime = data.Length > 0 ? data[0] : string.Empty;
+                    result.Overtime = data.Length > 1 ? data[1] : string.Empty;
+                    result.Pressure = data.Length > 2 ? data[2] : string.Empty;
+                    result.TimeVacuum = data.Length > 3 ? data[3] : string.Empty;
+                    result.TemperatureOrdinary = data.Length > 4 ? data[4] : string.Empty;
+                    result.TimeStartLot = data.Length > 5 ? data[5] : string.Empty;
+                    result.TimeEndLot = data.Length > 6 ? data[6] : string.Empty;
+                    result.Vent = data.Length > 7 ? data[7] : string.Empty;
+                    result.TimeVent = data.Length > 8 ? data[8] : string.Empty;
+                    result.TemperatureWorking = data.Length > 9 ? data[9] : string.Empty;
+
+                    formMain.AddDataGridView(result);
+
+                    Task.Run(() =>
+                    {
+                        //string path = string.Empty;
+                        //Files.WriteCSV(path, result);
+                        //SQLite.Instance.Insert(result);
+                    });
+                }
+                else
+                {
+                    Global.TotalLot += 1;
+                    Files.WriteFileToTxt(Files.GetFilePathSetting(), new Dictionary<string, string>
+                    {
+                        {"TOTAL_LOT", Global.TotalLot.ToString() }
+                    });
+                    formMain.SetTotalLot(Global.TotalLot.ToString());
+                }
             }
             catch (Exception ex)
             {

@@ -1,4 +1,5 @@
-﻿using OfficeOpenXml;
+﻿using MS_Seed.Classes;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -72,7 +73,7 @@ namespace MS_Seed.Common
         }
 
         //write csv
-        public static void WriteCSV(string path)
+        public static void WriteCSV(string path, DataSerialPort result)
         {
             lock (lockWriteCSV)
             {
